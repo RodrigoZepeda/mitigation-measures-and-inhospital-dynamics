@@ -102,7 +102,7 @@ Plots.plot(sol_bfgs, vars = (0,8), title = "Pos", ylabel = "I1(t)", xlabel = "t"
 png("pos.png")
 
 #https://storopoli.io/Bayesian-Julia/pages/12_epi_models/
-
+#=
 priors = [truncated(Normal(parameter_optim[1],0.1),0.0,1.0),
 	truncated(Normal(parameter_optim[2],0.1),0.0,1.0),
 	truncated(Normal(parameter_optim[3],0.1),0.0,1.0),
@@ -153,3 +153,4 @@ summ = EnsembleSummary(sol,quantiles=[0.025,0.975])
 Plots.plot(summ, idxs = (3,),label = "M(t)", xlabel = "t")
 @df datos_todos StatsPlots.scatter!(:t, :Defunciones)
 png("Turing_Mort.png")
+=#
