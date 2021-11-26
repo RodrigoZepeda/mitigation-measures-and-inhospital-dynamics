@@ -12,3 +12,4 @@ base_julia.csv
 *.Rproj
 .Rhistory
 .config/
+*threads
