@@ -11,3 +11,4 @@ diccionario_covid.rds
 base_julia.csv
 *.Rproj
 .Rhistory
+.config/
