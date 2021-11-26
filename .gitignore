@@ -1,0 +1,13 @@
+.DS_Store
+.julia
+.vscode
+.local
+.wget-hsts
+.Rproj.user
+log.out
+dats_covid.rds
+diccionario_covid.rds
+201128 Catalogos.xlsx
+base_julia.csv
+*.Rproj
+.Rhistory
