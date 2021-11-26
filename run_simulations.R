@@ -243,7 +243,7 @@ sample_df  <- m_sample$draws(format = "df")
 summarized <- m_sample$summary(NULL,~quantile(.x, probs = c(0.025, 0.5, 0.975), na.rm = T))
 
 #Save model 
-m_sample$save_output_files(basename = "output_modelo_ajustado_nov_2021_polinomial_chido_vsims")
+m_sample$save_output_files(basename = "output_modelo_ajustado_nov_2021_polinomial_chido_vsims", random = F, timestamp = F)
 m_sample$save_object(file = "modelo_ajustado_nov_2021_polinomial_chido_vsims.rds")
 
 # -----------------------------------------------------------------------------
@@ -307,7 +307,7 @@ ggplot(sims) +
     x = "Date of 2020",
     y = "Number of cases",
     title = "Fitting resulting from the SEIQR model to Mexican population data",
-    subtitle = "Probability intervals at 99%"
+    subtitle = "Probability intervals at 95%"
   ) +
   coord_cartesian(xlim = c(ymd("2020/04/01"),ymd("2020/12/31")))
 ggsave("Model_fit_nov_2021.pdf", width = 8, height = 6)
@@ -364,12 +364,12 @@ ggplot(model1) +
   labs(
     x = "Date of 2020",
     y = "Number of cases",
-    title = "Fitting resulting from the SEIQR model to Mexican population data",
-    subtitle = "Probability intervals at 99%"
+    title = "Modelled evolution of the pandemic in Mexico during 2020",
+    subtitle = "Probability intervals at 95%"
   ) +
   scale_y_continuous(labels = scales::comma) +
   coord_cartesian(xlim = c(ymd("2020/04/01"),ymd("2020/12/31")))
-ggsave("Model_as_is_2021.pdf", width = 8, height = 6)
+ggsave("Model_caeteris_paribus_2021.pdf", width = 8, height = 6)
 
 #MODEL 2
 #---------------------------------------------------------------
@@ -422,12 +422,12 @@ ggplot(model2) +
   labs(
     x = "Date of 2020",
     y = "Number of cases",
-    title = "Fitting resulting from the SEIQR model to Mexican population data",
-    subtitle = "Probability intervals at 99%"
+    title = "Counterfactual of quarantine for 50% symptomatic infections in Mexico during 2020",
+    subtitle = "Probability intervals at 95%",
   ) +
   scale_y_continuous(labels = scales::comma) +
   coord_cartesian(xlim = c(ymd("2020/04/01"),ymd("2020/12/31")))
-ggsave("Model_q2_2021.pdf", width = 8, height = 6)
+ggsave("Model_quarantine_symptoms_2021.pdf", width = 8, height = 6)
 
 #MODEL 3
 #---------------------------------------------------------------
@@ -480,8 +480,8 @@ ggplot(model3) +
   labs(
     x = "Date of 2020",
     y = "Number of cases",
-    title = "Fitting resulting from the SEIQR model to Mexican population data",
-    subtitle = "Probability intervals at 99%"
+    title = "Counterfactual of quarantine for 50% of the population in Mexico during 2020",
+    subtitle = "Probability intervals at 95%"
   ) +
   scale_y_continuous(labels = scales::comma) +
   coord_cartesian(xlim = c(ymd("2020/04/01"),ymd("2020/12/31")))
@@ -545,12 +545,70 @@ ggplot(model5) +
   labs(
     x = "Date of 2020",
     y = "Number of cases",
-    title = "Fitting resulting from the SEIQR model to Mexican population data",
-    subtitle = "Probability intervals at 99%"
+    title = "Counterfactual of healthcare services collapsing in Mexico during 2020",
+    subtitle = "Probability intervals at 95%"
   ) +
   scale_y_continuous(labels = scales::comma) +
   coord_cartesian(xlim = c(ymd("2020/04/01"),ymd("2020/12/31"))) 
 ggsave("Model_sat_2021.pdf", width = 8, height = 6)
+
+#MODEL 6
+#---------------------------------------------------------------
+infected <- summarized %>%
+  filter(str_detect(variable,"y_model_6\\[.*,4]")) %>%
+  mutate(time = 1:n()) %>%
+  mutate(Fecha = min(cases$Fecha) + days(time)) %>%
+  filter(year(Fecha) < 2021) %>%
+  mutate(variable = "Infected")
+
+hospitalized <- summarized %>%
+  filter(str_detect(variable,"y_model_6\\[.*,5]")) %>%
+  mutate(time = 1:n()) %>%
+  mutate(Fecha = min(cases$Fecha) + days(time)) %>%
+  filter(year(Fecha) < 2021) %>%
+  mutate(variable = "Hospitalized")
+
+icu <- summarized %>%
+  filter(str_detect(variable,"y_model_6\\[.*,6]")) %>%
+  mutate(time = 1:n()) %>%
+  mutate(Fecha = min(cases$Fecha) + days(time)) %>%
+  filter(year(Fecha) < 2021) %>%
+  mutate(variable = "ICU")
+
+death <- summarized %>%
+  filter(str_detect(variable,"y_model_6\\[.*,7]")) %>%
+  mutate(time = 1:n()) %>%
+  mutate(Fecha = min(cases$Fecha) + days(time)) %>%
+  filter(year(Fecha) < 2021) %>%
+  mutate(variable = "Death")
+
+model6 <- infected %>%
+  bind_rows(hospitalized) %>%
+  bind_rows(icu) %>%
+  bind_rows(death) %>%
+  mutate(Measures = "Model 3x4")
+
+ggplot(model6) +
+  geom_ribbon(aes(x = Fecha, ymin = N*`2.5%`, ymax = N*`97.5%`, fill = variable), alpha = 0.2) +
+  geom_line(aes(x = Fecha, y = N*`50%`, color = variable, linetype = Measures), size = 1) +
+  geom_ribbon(aes(x = Fecha, ymin = N*`2.5%`, ymax = N*`97.5%`, fill = variable), 
+              alpha = 0.2, data = model1) +
+  geom_line(aes(x = Fecha, y = N*`50%`, color = variable, linetype = Measures), 
+            size = 1, data = model1) +
+  theme_bw() +
+  facet_wrap(~variable, scales = "free") +
+  theme_classic() +
+  scale_color_manual("Variable", values = wes_palette("Darjeeling1")) +
+  scale_fill_manual("Variable", values = wes_palette("Darjeeling1")) +
+  labs(
+    x = "Date of 2020",
+    y = "Number of cases",
+    title = "Counterfactual of healthcare services collapsing in Mexico during 2020",
+    subtitle = "Probability intervals at 95%"
+  ) +
+  scale_y_continuous(labels = scales::comma) +
+  coord_cartesian(xlim = c(ymd("2020/04/01"),ymd("2020/12/31"))) 
+ggsave("Model_3x4_2021.pdf", width = 8, height = 6)
 
 
 
